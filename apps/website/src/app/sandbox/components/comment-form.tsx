@@ -13,21 +13,20 @@ import {
 	FormItem,
 	FormMessage,
 } from "@/styles/default/ui/form"
-import { Input } from "@/styles/default/ui/input"
 import { TextArea } from "@/styles/default/ui/text-area"
+import { useAuth } from "../auth/auth-context"
 
 const commentFormSchema = z.object({
-	authorName: z
-		.string()
-		.min(1, "Name is required")
-		.max(50, "Name must be under 50 characters"),
 	content: z
 		.string()
 		.min(2, "Comment must be at least 2 characters")
 		.max(500, "Comment must be under 500 characters"),
 })
 
-export type CommentFormValues = z.infer<typeof commentFormSchema>
+export type CommentFormValues = {
+	content: string
+	authorName?: string
+}
 
 interface CommentFormProps {
 	elementTag: string
@@ -44,21 +43,27 @@ export function CommentForm({
 	onCancel,
 	isSubmitting = false,
 }: CommentFormProps) {
-	const form = useForm<CommentFormValues>({
+	const { user } = useAuth()
+
+	const form = useForm<z.infer<typeof commentFormSchema>>({
 		resolver: zodResolver(commentFormSchema),
 		defaultValues: {
-			authorName: "",
 			content: "",
 		},
 	})
 
 	const handleSubmit = form.handleSubmit(async (data) => {
-		await onSubmit(data)
-		form.reset()
+		await onSubmit({
+			content: data.content,
+			authorName: user?.firstName || "",
+		})
+		form.reset({
+			content: "",
+		})
 	})
 
 	return (
-		<div className="border-border bg-bg animate-in fade-in zoom-in-95 w-72 rounded-xl border p-3 shadow-xl duration-150">
+		<div className="border-border bg-bg animate-in fade-in zoom-in-95 w-76 rounded-xl border p-3 shadow-xl duration-150">
 			{/* Header info */}
 			<div className="mb-2 flex items-center justify-between gap-2">
 				<div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
@@ -85,7 +90,7 @@ export function CommentForm({
 			</div>
 
 			<Form {...form}>
-				<form onSubmit={handleSubmit} className="space-y-2">
+				<form onSubmit={handleSubmit} className="space-y-2.5">
 					{/* Comment content */}
 					<FormField
 						control={form.control}
@@ -106,48 +111,28 @@ export function CommentForm({
 						)}
 					/>
 
-					{/* Author name & actions */}
-					<div className="flex items-center justify-between gap-2 pt-0.5">
-						<FormField
-							control={form.control}
-							name="authorName"
-							render={({ field }) => (
-								<FormItem className="min-w-0 flex-1 space-y-0">
-									<FormControl>
-										<Input
-											placeholder="Your name"
-											size="28"
-											className="h-7 text-xs"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage className="text-[10px]" />
-								</FormItem>
-							)}
-						/>
-
-						<div className="flex shrink-0 items-center gap-1">
-							<Button
-								type="button"
-								variant="ghost"
-								color="neutral"
-								size="28"
-								onClick={onCancel}
-								disabled={isSubmitting}
-								className="h-7 text-xs">
-								Cancel
-							</Button>
-							<Button
-								type="submit"
-								variant="strong"
-								color="primary"
-								size="28"
-								loading={isSubmitting}
-								className="h-7 gap-1 text-xs font-semibold">
-								<Send className="size-3" />
-								<span>Post</span>
-							</Button>
-						</div>
+					{/* Actions */}
+					<div className="flex items-center justify-end gap-1 pt-0.5">
+						<Button
+							type="button"
+							variant="ghost"
+							color="neutral"
+							size="28"
+							onClick={onCancel}
+							disabled={isSubmitting}
+							className="h-7 text-xs">
+							Cancel
+						</Button>
+						<Button
+							type="submit"
+							variant="strong"
+							color="primary"
+							size="28"
+							loading={isSubmitting}
+							className="h-7 gap-1 text-xs font-semibold">
+							<Send className="size-3" />
+							<span>Post</span>
+						</Button>
 					</div>
 				</form>
 			</Form>

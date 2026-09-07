@@ -1,6 +1,8 @@
 import fs from "fs"
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 import path from "path"
+import { getCurrentUser } from "@/lib/auth"
 import { PlaygroundClient } from "./playground-client"
 
 export const metadata: Metadata = {
@@ -23,7 +25,12 @@ function readFileContent(dirPath: string, fileName: string): string {
 	}
 }
 
-export default function PlaygroundPage() {
+export default async function PlaygroundPage() {
+	const user = await getCurrentUser()
+	if (!user) {
+		redirect("/sandbox/auth/sign-in?callbackUrl=/sandbox")
+	}
+
 	const omrixDir = path.join(process.cwd(), "src/app/sandbox/omrix")
 	const motionDir = path.join(process.cwd(), "src/app/sandbox/motion")
 	const beamHeaderDir = path.join(process.cwd(), "src/app/sandbox/beam-header")

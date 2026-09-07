@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { getCurrentUser } from "@/lib/auth"
 import { pool } from "@/lib/db"
 
 export interface SandboxComment {
@@ -120,10 +121,12 @@ export async function POST(request: Request) {
 		}
 
 		const id = `comment_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+		const currentUser = await getCurrentUser()
 		const finalAuthor =
-			typeof authorName === "string" && authorName.trim()
+			currentUser?.firstName ||
+			(typeof authorName === "string" && authorName.trim()
 				? authorName.trim()
-				: "Anonymous"
+				: "Anonymous")
 
 		const result = await pool.query(
 			`INSERT INTO sandbox_comments (

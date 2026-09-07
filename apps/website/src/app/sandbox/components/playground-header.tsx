@@ -7,6 +7,8 @@ import {
 	ExternalLink,
 	Eye,
 	Globe,
+	LogIn,
+	LogOut,
 	MessageSquare,
 	Monitor,
 	Moon,
@@ -16,9 +18,18 @@ import {
 	Tablet,
 } from "lucide-react"
 import { useTheme } from "next-themes"
-import { IconButton } from "@/styles/default/ui/button"
+import Link from "next/link"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuDivider,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/registry/ui/dropdown-menu"
+import { Button, IconButton } from "@/styles/default/ui/button"
 import { SidebarTrigger } from "@/styles/default/ui/sidebar"
 import { Tabs, TabsList, TabsTrigger } from "@/styles/default/ui/tabs"
+import { useAuth } from "../auth/auth-context"
 import type { DeviceSize, SandboxComponentConfig, ViewMode } from "./types"
 
 interface PlaygroundHeaderProps {
@@ -45,6 +56,7 @@ export function PlaygroundHeader({
 	commentsCount = 0,
 }: PlaygroundHeaderProps) {
 	const { resolvedTheme, setTheme } = useTheme()
+	const { user, isLoading, signOut } = useAuth()
 	const [mounted, setMounted] = useState(false)
 
 	useEffect(() => {
@@ -176,6 +188,56 @@ export function PlaygroundHeader({
 						<Sun className="animate-in fade-in zoom-in-75 size-4 duration-200" />
 					)}
 				</IconButton>
+
+				{/* User Authentication Status */}
+				{isLoading ? (
+					<div className="bg-fill2 h-7 w-16 animate-pulse rounded-full" />
+				) : user ? (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button
+								type="button"
+								className="border-border bg-fill2 text-fg hover:bg-fill3 flex h-7 cursor-pointer items-center gap-1.5 rounded-full border px-2 text-xs font-medium transition-colors focus:outline-none">
+								<span className="size-4.5 bg-primary text-primary-fg flex items-center justify-center rounded-full text-[10px] font-bold">
+									{user.firstName.charAt(0).toUpperCase()}
+								</span>
+								<span className="max-w-[85px] truncate">{user.firstName}</span>
+							</button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-48">
+							<div className="px-2.5 py-2">
+								<p className="text-fg text-xs font-semibold">
+									{user.firstName}
+								</p>
+								<p className="text-fg-secondary truncate text-[11px]">
+									{user.email}
+								</p>
+							</div>
+							<DropdownMenuDivider />
+							<DropdownMenuItem
+								onClick={async () => {
+									await signOut()
+									window.location.href = "/sandbox/auth/sign-in"
+								}}
+								className="text-danger cursor-pointer gap-2 text-xs">
+								<LogOut className="size-3.5" />
+								<span>Sign Out</span>
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				) : (
+					<Button
+						variant="ghost"
+						color="neutral"
+						size="28"
+						asChild
+						className="text-fg-secondary hover:text-fg h-7 gap-1 text-xs font-medium">
+						<Link href="/sandbox/auth/sign-in">
+							<LogIn className="size-3.5" />
+							<span>Sign In</span>
+						</Link>
+					</Button>
+				)}
 			</div>
 		</header>
 	)

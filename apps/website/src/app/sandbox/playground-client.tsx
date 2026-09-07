@@ -1,7 +1,9 @@
 "use client"
 
-import React, { useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { SidebarInset, SidebarProvider } from "@/styles/default/ui/sidebar"
+import { useAuth } from "./auth/auth-context"
 import { PlaygroundCodeViewer } from "./components/playground-code-viewer"
 import { PlaygroundHeader } from "./components/playground-header"
 import { PlaygroundPreview } from "./components/playground-preview"
@@ -21,6 +23,15 @@ export interface PlaygroundClientProps {
 }
 
 export function PlaygroundClient({ files }: PlaygroundClientProps) {
+	const { user, isLoading } = useAuth()
+	const router = useRouter()
+
+	useEffect(() => {
+		if (!isLoading && !user) {
+			router.replace("/sandbox/auth/sign-in?callbackUrl=/sandbox")
+		}
+	}, [user, isLoading, router])
+
 	const [activeComponent, setActiveComponent] = useState<PreviewKey>("hero-21")
 	const [activeFile, setActiveFile] = useState<string>("hero-section.tsx")
 	const [viewMode, setViewMode] = useState<ViewMode>("preview")
